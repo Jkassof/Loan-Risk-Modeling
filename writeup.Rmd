@@ -1,0 +1,60 @@
+---
+title: "Credit Risk Modeling"
+author: "Jordan Kassof"
+date: "December 21, 2015"
+output: html_document
+---
+
+Today I want to explore a classic classification problem; credit ratings. In particular we will be looking to model the quality of a loan prospect given a set of attributes about the loan ant he applicant.  We will be using the German Credit dataset that comes with the `caret` package.
+
+First let's load up our data get a grip on what we are looking at.
+
+```{r, message = FALSE}
+library(caret); data("GermanCredit")
+```
+
+Below is an excerpt from the UCI MAchine Learning Repository about this particular data set.
+
+>Data from Dr. Hans Hofmann of the University of Hamburg.
+
+> These data have two classes for the credit worthiness: good or bad. 
+> There are predictors related to attributes, such as: checking account 
+> status, duration, credit history, purpose of the loan, amount of the 
+> loan, savings accounts or bonds, employment duration, Installment rate in percentage of disposable income, personal information, other 
+> debtors/guarantors, residence duration, property, age, other installment 
+> plans, housing, number of existing credits, job information, Number of people being liable to provide maintenance for, telephone, and foreign worker status.
+
+So our goal is to figure out how to accurately model credit worthiness based on a series of features about the loan itself and the applicant. This is a very important process in the financial services world, understanding the risk in a loan portfolio is key to any lender's business model. Bad credit masquerading as good credit was one of the key drivers of the last financial crisis.
+
+# Exploratory Data Analysis
+
+Getting a general feel for the relationships represented by a data set is a crucial first step in modeling. Looking at our list of variables, Age seems like as good a place as ever to start looks. Let's see what the age distribution of Good and Bad loans look like.
+
+Below code produces a nice ggplot visualization of the Age (of applicant), Duration (of loan) and Amount (of loan) broken out by the classification of the loan.
+
+```{r, plotting age dists, warning = FALSE, fig.align = 'center', fig.height= 6}
+library(gridExtra)
+g1 <- ggplot(GermanCredit, aes(x = Class, y  = Age)) + 
+  geom_violin(alpha = 0.5, color = "gray") + 
+  geom_jitter(alpha = 0.5, aes(color = Class), position =   position_jitter(width = .2)) + coord_flip() + labs(x ="")  +
+  theme(legend.position="none")
+
+g2 <- ggplot(GermanCredit, aes(x = Class, y  = Duration)) + 
+  geom_violin(alpha = 0.5, color = "gray") + 
+  geom_jitter(alpha = 0.5, aes(color = Class), position =   position_jitter(width = .2)) + coord_flip() + labs(x ="") +
+  theme(legend.position="none")
+
+g3 <- ggplot(GermanCredit, aes(x = Class, y  = Amount)) + 
+  geom_violin(alpha = 0.5, color = "gray") + 
+  geom_jitter(alpha = 0.5, aes(color = Class), position =   position_jitter(width = .2)) + coord_flip() + labs(x ="") +
+  theme(legend.position="none")
+
+grid.arrange(g1, g2, g3, nrow = 3)
+```
+
+We can see that Bad loans appear to have a higher proportion of younger applicatants relative to Good loans. This isn't too surprising, we would expect older Applicants to be lower risk as they presumably have had more time to prepare financially and logistically to take on a line of credit.
+
+```{r}
+
+```
+
