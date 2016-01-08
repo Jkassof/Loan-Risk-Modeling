@@ -54,7 +54,10 @@ svm.fit <- train(Class ~ ., data = training,
 
 ## Rpart Model
 
-rpart.fit <- rpart(Class ~ ., data = training)
+rpart.fit <- rpart::rpart(Class ~ ., data = training, method = 'class')
+
+
+
 rpart.preds <- predict(rpart.fit, type = 'class', testing)
 
 confusionMatrix(rpart.preds, testing$Class)
