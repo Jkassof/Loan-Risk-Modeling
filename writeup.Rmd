@@ -69,6 +69,7 @@ An important first step of any data modeling project is establishing training an
 Below we split our data into 60% training and 40% testing.
 
 ```{r}
+set.seed(65897)
 inTrain <- createDataPartition(GermanCredit$Class, p = 0.6, list = FALSE)
 training <- GermanCredit[inTrain,]
 testing <- GermanCredit[-inTrain,]
@@ -78,18 +79,17 @@ testing <- GermanCredit[-inTrain,]
 
 Classification and Regression Tree (CART) modeling is a popular standard because the results are easy to visualize and interpret and it is very inexpensive (computationally and thus economically) to make future predictions. Below I will grow a basic decision tree
 
-```{r, CART model, fig.align='center', cache= TRUE}
+```{r, CART model, fig.align='center', cache= TRUE, warning = FALSE, message=FALSE}
 set.seed(1223); library(rpart)
 rpart.fit <- rpart(Class ~ ., data = training, 
                    method = 'class',
                    minsplit = 0,
                    cp = 0) # grow tree
 plot(rpart.fit, uniform = TRUE, main = 'Credit Approval Decision Tree') # plot tree
-#text(rpart.fit, cex = .65, use.n = TRUE)
 
 ```
 
-The number of splits in the above tree all but guarantees an overfit model.  Part of the benefit of trees is their ease of interpretability...and the above is a total mess.
+The details of the splits for the above tree are left out intentionally. The number of splits all but guarantees an overfit model.  Part of the benefit of trees is their ease of interpretability...and the above is a total mess.
 
 For this reason I am going to prune the tree by using a complexity factor that minimizes the cross-validation error. The complexity factor is one of the "knobs" that a data scientist has at their disposal to tweak how the CART model comes out.
 
@@ -97,7 +97,7 @@ The below code plots the effect of the complexity factor on relative error. Then
 
 ```{r pruning tree, fig.align = 'center'}
 
-plotcp(rpart.fit)
+rpart::plotcp(rpart.fit)
 
 pruned.rpart <- rpart::prune(rpart.fit, cp = 
                         rpart.fit$cptable[which.min(rpart.fit$cptable[, "xerror"]), "CP"])
@@ -134,9 +134,6 @@ Below is a basic random forest implementation which uses 10 time repeated 10-fol
 
 
 ```{r, random forest, cache = TRUE, message=FALSE, warning = FALSE}
-library(doParallel) # These three lines of code allow R to use the multiple cores in your
-cl<- makeCluster(detectCores()) # CPU processor as parallel processors. This can
-registerDoParallel(cl) # greatly reduce the time needed to train such a model
 
 fitControl <- trainControl(method = "repeatedcv",
                            number = 10,
@@ -146,13 +143,13 @@ rf.fit <- train(Class ~ ., data = training,
                  method = "rf",
                  trControl = fitControl)
 
-rf.fit
+summary(rf.fit)
 ```
 
 A very useful feature of tree based modeling is that you can easily identify the most important variables.  There are regulations that require a lender to provide the specific reasons an applicant was turned down in certain situations. Let's see what our models show.
 
 ```{r, variable important}
 
-
+varImp(rf.fit)
 
 ```
