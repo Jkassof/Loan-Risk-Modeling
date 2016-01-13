@@ -108,7 +108,7 @@ text(pruned.rpart, cex = .65, use.n = TRUE)
 confusionMatrix(predict(pruned.rpart, newdata = testing, type = 'class'), testing$Class)
 ```
 
-So we can see we  have a 73% accuracy, but accuracy is not always the most relevant or important statistical measure.  There are a number of measures related to binary classification, all of which have their time to shine pending on the field!  A succint table describing the various measurements is below.
+So we can see we  have a 69.5% accuracy, but accuracy is not always the most relevant or important statistical measure.  There are a number of measures related to binary classification, all of which have their time to shine pending on the field!  A succint table describing the various measurements is below.
 
 ![alt text](http://41.media.tumblr.com/tumblr_m2by0pnhQ51rqgwpio1_1280.png "Logo Title Text 1")
 
@@ -116,7 +116,7 @@ So we can see we  have a 73% accuracy, but accuracy is not always the most relev
 
 Conditional inference trees are another example of recursive partioning.  Utilizing a clever statistical approach, CI Trees have slightly different nodes than regular decision trees and they provide distributional properties at the end of each branch.
 
-```{r, party tree}
+```{r, party tree, message=FALSE}
 set.seed(1223); library(party)
 cfit <- ctree(Class ~ ., data = training)
 plot(cfit, cex = .8)
@@ -142,14 +142,22 @@ fitControl <- trainControl(method = "repeatedcv",
 rf.fit <- train(Class ~ ., data = training,
                  method = "rf",
                  trControl = fitControl)
-
-summary(rf.fit)
 ```
 
-A very useful feature of tree based modeling is that you can easily identify the most important variables.  There are regulations that require a lender to provide the specific reasons an applicant was turned down in certain situations. Let's see what our models show.
+```{r}
+
+confusionMatrix(predict(rf.fit, newdata = testing), testing$Class)
+```
+
+As we can see, the confusion matrix and statistics for our Random Forest are generally better than the single decision tree from earlier. A very useful feature of random forest modeling is that you can easily identify the most important variables.  There are regulations that can require a lender to provide the specific reasons an applicant was turned down in certain situations. Let's see what our random forest shows.
+
 
 ```{r, variable important}
 
 varImp(rf.fit)
 
 ```
+
+
+
+The factors with the most influence in our model are the amount of the loan, the duration of the payback period, the age of the requestor, the checking account status, and credit history.  These are all pretty intuitive factors that play into credit decisions. This is a bit of a double-edged sword. On the one hand, it is nice to have our intuition reaffirmed via quantitative methods.  On the other hand, why go through all the hassle of building and maintaining a machine learning model if it is only affirming our intuition? We go through the hassle because of the numerous limits on human memory.  Our brains can remember a very limited number of details accurately and are suceptible to a wide range of cognative bias which served us very well as hunters and gathers.  Computers on the other hand can 100% accurately "remember" and reference *insert your favorite prefix here*-illions of data points.  This allows us to build decision-making frameworks that are unburdened by the limitations of the human brain. 
