@@ -5,9 +5,9 @@ date: "December 21, 2015"
 output: html_document
 ---
 
-Today I want to explore a classic classification problem (apologies for the accidental phone) encountered in business; credit ratings/approvals. In particular we will be looking to classify the quality of a loan prospect (good/bad) given a set of attributes about the loan and the applicant.  We will be using the German Credit dataset that comes with the `caret` package.
+Today I want to explore a classic classification problem encountered in business; credit ratings/approvals. In particular we will be looking to classify the quality of a loan prospect (good/bad) given a set of attributes about the loan and the applicant.  We will be using the German credit data set that comes with the `caret` package.
 
-First let's load up our data get a grip on what we are looking at.
+First let's load up our data and get a grip on what we are looking at.
 
 ```{r, message = FALSE}
 library(caret); data("GermanCredit")
@@ -28,7 +28,7 @@ This is a very important task in the financial services industry; understanding 
 
 # Exploratory Data Analysis
 
-Getting a general feel for the relationships represented by a data set is a crucial first step in modeling. Looking at our list of variables, Age seems like as good a place as ever to start looks. Let's see what the age distribution of Good and Bad loans look like.
+Getting a general feel for the relationships represented by a data set is a crucial first step. Looking at our list of variables, Age seems like as good a place as any to start digging. Let's see what the age distribution of Good and Bad loans look like.
 
 Below code produces a nice little ggplot visualization of the Age (of applicant), Duration (of loan) and Amount (of loan) broken out by the classification of the loan.
 
@@ -58,13 +58,11 @@ g3 <- ggplot(GermanCredit, aes(x = Class, y  = Amount)) +
 grid.arrange(g1, g2, g3, nrow = 3)
 ```
 
-We can see that Bad loans appear to have a higher proportion of young applicatants relative to Good loans. This isn't too surprising, we would expect older Applicants to be lower risk as they presumably have had more time to prepare financially and logistically to take on a line of credit.
+We can see that Bad loans appear to have a higher proportion of young applicants relative to Good loans. This isn't too surprising, we would expect older Applicants to be lower risk as they presumably have had more time to prepare financially and logistically to take on a line of credit.
 
 # Modeling
 
-In this section of our exploration I will be developing a number of models to predict the class of a loan.  I will utilize various algorithms and R package implementations but in the end I will attempt to quantitatively measure how each performs.
-
-An important first step of any data modeling project is establishing training and testing data. We build our models on our training data, totally blind to the testing set.  Once we are satisfied with our perforamcne on our training data we can apply the model to the testing set to get an idea for the out-of-sample performance of our model. This is a crucial step to check for overfitting models to the training data.  
+Splitting your data into a training and testing set is important for model quality. We build our models on our training data, totally blind to the testing set.  Once we are satisfied with our performance on our training data we can apply the model to the testing set to get an idea of the out-of-sample performance of our model. By leaving out a chunk of our data for testing, we can make sure that our model isn't overfit to our data.  
 
 Below we split our data into 60% training and 40% testing.
 
@@ -77,23 +75,23 @@ testing <- GermanCredit[-inTrain,]
 
 ## CART Modeling
 
-Classification and Regression Tree (CART) modeling is a popular standard because the results are easy to visualize and interpret and it is very inexpensive (computationally and thus economically) to make future predictions. Below I will grow a basic decision tree
+Classification and Regression Tree (CART) modeling is a popular standard because the results are easy to visualize and interpret and it is very inexpensive (computationally) to make future predictions. Below I will grow a basic decision tree.
 
 ```{r, CART model, fig.align='center', cache= TRUE, warning = FALSE, message=FALSE}
 set.seed(1223); library(rpart)
 rpart.fit <- rpart(Class ~ ., data = training, 
                    method = 'class',
-                   minsplit = 0,
+                   minsplit = 1,
                    cp = 0) # grow tree
 plot(rpart.fit, uniform = TRUE, main = 'Credit Approval Decision Tree') # plot tree
 
 ```
 
-The details of the splits for the above tree are left out intentionally. The number of splits all but guarantees an overfit model.  Part of the benefit of trees is their ease of interpretability...and the above is a total mess.
+The details of the splits for the above tree are left out intentionally because I set the parameters to purposefully overfit out data. Now we can prune back our tree to reduce overfitting. Part of the benefit of decision trees is they are fast and easy to interpret.
 
 For this reason I am going to prune the tree by using a complexity factor that minimizes the cross-validation error. The complexity factor is one of the "knobs" that a data scientist has at their disposal to tweak how the CART model comes out.
 
-The below code plots the effect of the complexity factor on relative error. Then we prune the tree using the complexcity factor that minimizes error. Next we will plot the pruned tree and create a confusion matrix to compare look at the predictions our model comes up with for the test data.
+The below code plots the effect of the complexity factor on relative error. Then we prune the tree using the complexity factor that minimizes error. Next we will plot the pruned tree and create a confusion matrix to look at the accuracy of our model's predictions.
 
 ```{r pruning tree, fig.align = 'center'}
 
@@ -108,13 +106,13 @@ text(pruned.rpart, cex = .65, use.n = TRUE)
 confusionMatrix(predict(pruned.rpart, newdata = testing, type = 'class'), testing$Class)
 ```
 
-So we can see we  have a 69.5% accuracy, but accuracy is not always the most relevant or important statistical measure.  There are a number of measures related to binary classification, all of which have their time to shine pending on the field!  A succint table describing the various measurements is below.
+So we can see we  have a 69.5% accuracy, but accuracy is not always the most relevant or important statistical measure.  There are a number of measures related to binary classification, all of which have their time to shine pending on the field!  A succinct table describing the various measurements is below.
 
 ![alt text](http://41.media.tumblr.com/tumblr_m2by0pnhQ51rqgwpio1_1280.png "Logo Title Text 1")
 
 ## Conditional Inference Trees
 
-Conditional inference trees are another example of recursive partioning.  Utilizing a clever statistical approach, CI Trees have slightly different nodes than regular decision trees and they provide distributional properties at the end of each branch.
+Conditional inference trees are another example of classification decision trees.  Utilizing a clever statistical approach, CI Trees have different nodes than regular decision trees and they provide distributional properties at the end of each branch.
 
 ```{r, party tree, message=FALSE}
 set.seed(1223); library(party)
@@ -128,9 +126,9 @@ plot(cfit, cex = .8)
 
 Another option for classification modeling is the random forest.
 
-Random Forest algorithms have risen to become major players in predictive analytics and are a natural extension of decision trees. Random forests ameliorate decision tree's overfitting problem by growing many decision trees, each with a random subset of the available features.  The random forest then takes the mode of all the predictions to come up with a final prediction.
+Random Forest algorithms have become major players in predictive analytics and are a natural extension of decision trees. Random forests ameliorate decision tree's over-fitting problem by growing many decision trees, each with a random subset of the available features.  The random forest then takes the mode of all the predictions to come up with a final prediction.
 
-Below is a basic random forest implementation which uses 10 time repeated 10-fold cross-validation.  Cross-validation is another method of reducing overfitting. There are a number of "knobs" which can be tweaked on the random forest algorithm, but for brevity's sake, the below is untweaked.
+Below is a basic random forest implementation which uses 10 time repeated 10-fold cross validation.  Cross-validation is another method of reducing over-fitting. There are a number of "knobs" which can be tweaked on the random forest algorithm, but for brevity's sake, the below is untweaked.
 
 
 ```{r, random forest, cache = TRUE, message=FALSE, warning = FALSE}
@@ -160,4 +158,8 @@ varImp(rf.fit)
 
 
 
-The factors with the most influence in our model are the amount of the loan, the duration of the payback period, the age of the requestor, the checking account status, and credit history.  These are all pretty intuitive factors that play into credit decisions. This is a bit of a double-edged sword. On the one hand, it is nice to have our intuition reaffirmed via quantitative methods.  On the other hand, why go through all the hassle of building and maintaining a machine learning model if it is only affirming our intuition? We go through the hassle because of the numerous limits on human memory.  Our brains can remember a very limited number of details accurately and are suceptible to a wide range of cognative bias which served us very well as hunters and gathers.  Computers on the other hand can 100% accurately "remember" and reference *insert your favorite prefix here*-illions of data points.  This allows us to build decision-making frameworks that are unburdened by the limitations of the human brain. 
+The factors with the most influence in our model are the amount of the loan, the duration of the payback period, the age of the requester, the checking account status, and credit history.  These are all pretty intuitive factors that play into credit decisions. This is a bit of a double-edged sword. On the one hand, it is nice to have our intuition reaffirmed via quantitative methods. It is important to remember that modeling is meant to be complementary to people, not supplementary.  
+
+On the other hand, why go through all the hassle of building and maintaining a machine learning model if it is only affirming our intuition? We go through the hassle because of the numerous limits on human memory.  Our brains can remember a very limited number of details accurately and are susceptible to a wide range of cognitive bias which served us very well as hunters and gathers, not so much as modern data analysts.  Computers on the other hand can 100% accurately "remember" and reference *insert your favorite prefix here*-illions of data points.  This allows us to build decision-making frameworks that are unburdened by the limitations of the human brain. 
+
+I hope you got as much from reading this as I got from writing it. Thank you for your time.
