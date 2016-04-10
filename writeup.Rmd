@@ -2,7 +2,7 @@
 title: "Credit Risk Modeling"
 author: "Jordan Kassof"
 date: "December 21, 2015"
-output: html_document
+output: pdf_document
 ---
 
 Today I want to explore a classic classification problem encountered in business; credit ratings/approvals. In particular we will be looking to classify the quality of a loan prospect (good/bad) given a set of attributes about the loan and the applicant.  We will be using the German credit data set that comes with the `caret` package.
